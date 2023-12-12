@@ -70,6 +70,13 @@ def main():
         help="Add bottom magnet holes with 3D printer friendly strips without support",
     )
     parser.add_argument(
+        "-x",
+        "--magnetholesonly",
+        action="store_true",
+        default=False,
+        help="Add bottom magnet holes only (without the deeper screwhole extension)",
+    )
+    parser.add_argument(
         "-n",
         "--nolip",
         action="store_true",
@@ -146,8 +153,9 @@ def main():
         length_u=int(argsd["length"]),
         width_u=int(argsd["width"]),
         height_u=int(argsd["height"]),
-        holes=argsd["magnetholes"] or argsd["unsupported"],
+        holes=argsd["magnetholes"] or argsd["unsupported"] or argsd["magnetholesonly"],
         unsupported_holes=argsd["unsupported"],
+        magnet_holes_only=argsd["magnetholesonly"],
         no_lip=argsd["nolip"],
         scoops=argsd["scoops"],
         labels=argsd["labels"],
@@ -184,6 +192,8 @@ def main():
     s = []
     if argsd["unsupported"]:
         s.append("holes with no support")
+    elif argsd["magnetholesonly"]:
+        s.append("magnet holes only")
     elif argsd["magnetholes"]:
         s.append("holes")
     if argsd["nolip"]:

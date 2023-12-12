@@ -72,6 +72,7 @@ class GridfinityBox(GridfinityObject):
         self.solid_ratio = 1.0
         self.lite_style = False
         self.unsupported_holes = False
+        self.magnet_holes_only = False
         self.label_width = 12  # width of the label strip
         self.label_height = 10  # thickness of label overhang
         self.label_lip_height = 0.8  # thickness of label vertical lip
@@ -123,6 +124,10 @@ class GridfinityBox(GridfinityObject):
                 bs = HasZCoordinateSelector(GR_LITE_FLOOR, min_points=1, tolerance=0.5)
                 r = r.edges(bs).fillet(0.75)
         if self.holes:
+            if self.unsupported_holes & self.magnet_holes_only:
+                raise ValueError(
+                    "Cannot select both unsupported and magenet holes only"
+                )
             r = self.render_holes(r)
         r = r.translate((-self.half_l, -self.half_w, GR_BASE_HEIGHT))
         if self.unsupported_holes:
@@ -350,12 +355,14 @@ class GridfinityBox(GridfinityObject):
         h = GR_HOLE_H
         if self.unsupported_holes:
             h += GR_HOLE_SLICE
-        return (
-            obj.faces("<Z")
-            .workplane()
-            .pushPoints(self._hole_pts())
-            .cboreHole(GR_BOLT_D, GR_HOLE_D, h, depth=GR_BOLT_H)
-        )
+        
+        o = (obj.faces("<Z")
+                .workplane()
+                .pushPoints(self._hole_pts()))
+        if self.magnet_holes_only:
+            return o.hole(GR_HOLE_D, h)
+        else:
+            return o.cboreHole(GR_BOLT_D, GR_HOLE_D, h, depth=GR_BOLT_H)
 
     def render_hole_fillers(self, obj):
         rc = cq.Workplane("XY").rect(GR_HOLE_D / 2, GR_HOLE_D).extrude(GR_HOLE_SLICE)
